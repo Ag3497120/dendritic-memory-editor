@@ -30,6 +30,7 @@ export default function DmsEditor() {
     const [customDomain, setCustomDomain] = useState(''); // State for custom domain input
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
+    const [dbStats, setDbStats] = useState<any>(null); // New state for DB stats
 
     // Determine the active domain based on selection
     const activeDomain = selectedDomain === 'Other' ? customDomain : selectedDomain;
@@ -38,7 +39,8 @@ export default function DmsEditor() {
         if (activeDomain) { // Only fetch if activeDomain is set
             fetchTiles();
         }
-    }, [activeDomain]);
+        fetchDbStats(); // Fetch stats on component mount or user change
+    }, [activeDomain, user]); // Added user to dependency array
 
     const fetchTiles = async () => {
         setLoading(true);
@@ -51,6 +53,15 @@ export default function DmsEditor() {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchDbStats = async () => {
+        try {
+            const response = await apiClient.get('/api/db/stats');
+            setDbStats(response.data);
+        } catch (err) {
+            console.error('Failed to fetch DB stats:', err);
         }
     };
 
@@ -151,6 +162,27 @@ export default function DmsEditor() {
 
             {error && <p style={{ color: 'red' }}>{error}</p>}
             {loading && <p>Loading tiles for "{activeDomain}"...</p>} {/* Display activeDomain here */}
+
+            {/* DB Stats and Export Section */}
+            <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+                <h3>Database Status</h3>
+                <button onClick={handleDownloadDb} style={{ ...styles.button, backgroundColor: '#28a745', color: 'white', marginBottom: '15px' }}>
+                    Download All Data (JSON)
+                </button>
+                {dbStats && (
+                    <div>
+                        <p>Total Knowledge Tiles: <b>{dbStats.total_knowledge_tiles}</b></p>
+                        <p>Total Users: <b>{dbStats.total_users}</b></p>
+                        <h4>Tiles by Domain:</h4>
+                        <ul style={{ listStyle: 'disc', marginLeft: '20px' }}>
+                            {dbStats.knowledge_tiles_by_domain.map((item: any) => (
+                                <li key={item.domain}>{item.domain}: <b>{item.count}</b></li>
+                            ))}
+                        </ul>
+                        <small>Generated at: {new Date(dbStats.generated_at).toLocaleString()}</small>
+                    </div>
+                )}
+            </div>
 
             <ul style={styles.tileList}>
                 {tiles.map(tile => (
