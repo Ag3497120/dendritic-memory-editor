@@ -55,9 +55,9 @@ export default function Login() {
         <div style={styles.container}>
             <h2>Login to Dendritic Memory Editor</h2>
             
-            <a href={`${API_BASE_URL}/api/auth/google/login`} style={{...styles.button, ...styles.googleButton}}>Login with Google</a>
-            <a href={`${API_BASE_URL}/api/auth/github/login`} style={{...styles.button, ...styles.githubButton}}>Login with GitHub</a>
-            <a href={`${API_BASE_URL}/api/auth/orcid/login`} style={{...styles.button, ...styles.orcidButton}}>Login with ORCID</a>
+            <a href={`${API_BASE_URL}/api/oauth/google/login`} style={{...styles.button, ...styles.googleButton}}>Login with Google</a>
+            <a href={`${API_BASE_URL}/api/oauth/github/login`} style={{...styles.button, ...styles.githubButton}}>Login with GitHub</a>
+            <a href={`${API_BASE_URL}/api/oauth/orcid/login`} style={{...styles.button, ...styles.orcidButton}}>Login with ORCID</a>
             
             <button onClick={handleGuestLogin} style={{...styles.button, ...styles.guestButton}}>Continue as Guest</button>
 
