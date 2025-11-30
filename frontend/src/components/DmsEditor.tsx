@@ -14,7 +14,7 @@ export default function DmsEditor() {
     const { user } = useAuth();
     const [tiles, setTiles] = useState<KnowledgeTile[]>([]);
     const [newTileContent, setNewTileContent] = useState('');
-    const [domain, setDomain] = useState('medical'); // Default domain
+    const [domain, ] = useState('medical'); // Default domain, setDomain removed
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
 
