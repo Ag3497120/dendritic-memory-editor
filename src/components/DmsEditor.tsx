@@ -6,27 +6,45 @@ interface KnowledgeTile {
     id: string;
     domain: string;
     content: string;
+    author_id: string; // author_id added as per simplified schema
     author_mark: 'community' | 'expert';
+    created_at: string; // created_at added as per simplified schema
     updated_at: string;
 }
+
+const PREDEFINED_DOMAINS = [
+    'Medical',
+    'Programming',
+    'Mathematics',
+    'Science',
+    'History',
+    'Art',
+    'Other' // Special option for custom input
+];
 
 export default function DmsEditor() {
     const { user } = useAuth();
     const [tiles, setTiles] = useState<KnowledgeTile[]>([]);
     const [newTileContent, setNewTileContent] = useState('');
-    const [domain, ] = useState('medical'); // Default domain, setDomain removed
+    const [selectedDomain, setSelectedDomain] = useState('Medical'); // State for selected domain from dropdown
+    const [customDomain, setCustomDomain] = useState(''); // State for custom domain input
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
 
+    // Determine the active domain based on selection
+    const activeDomain = selectedDomain === 'Other' ? customDomain : selectedDomain;
+
     useEffect(() => {
-        fetchTiles();
-    }, [domain]);
+        if (activeDomain) { // Only fetch if activeDomain is set
+            fetchTiles();
+        }
+    }, [activeDomain]);
 
     const fetchTiles = async () => {
         setLoading(true);
         setError('');
         try {
-            const response = await apiClient.get(`/api/tiles?domain=${domain}`);
+            const response = await apiClient.get(`/api/tiles?domain=${activeDomain}`);
             setTiles(response.data);
         } catch (err) {
             setError('Failed to fetch knowledge tiles.');
@@ -43,15 +61,21 @@ export default function DmsEditor() {
             setError('Content cannot be empty.');
             return;
         }
+        if (!activeDomain.trim()) {
+            setError('Domain cannot be empty.');
+            return;
+        }
 
         try {
             const response = await apiClient.post('/api/tiles', {
                 content: newTileContent,
-                domain: domain,
+                domain: activeDomain, // Use activeDomain
             });
             setTiles([response.data, ...tiles]); // Add new tile to the top
             setNewTileContent(''); // Clear input
-        } catch (err: any) {
+            if (selectedDomain === 'Other') {
+                setCustomDomain(''); // Clear custom domain input as well
+            }        } catch (err: any) {
             setError(err.response?.data?.error || 'Failed to create tile.');
             console.error(err);
         }
@@ -84,13 +108,37 @@ export default function DmsEditor() {
         authorMark: { padding: '3px 8px', borderRadius: '12px', fontSize: '0.8em', color: 'white' },
         expertMark: { backgroundColor: '#007bff' },
         communityMark: { backgroundColor: '#6c757d' },
+        input: { padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }, // Added style for input
     };
     
     return (
         <div style={styles.editorContainer}>
-            <h2>Dendritic Memory Editor - "{domain}" Domain</h2>
+            <h2>Dendritic Memory Editor</h2>
             {user && <p>You are editing as an <b>{user.isExpert ? 'Expert' : 'Community'}</b> member.</p>}
             
+            <div style={{ marginBottom: '20px' }}>
+                <label htmlFor="domain-select" style={{ marginRight: '10px' }}>Select Domain:</label>
+                <select
+                    id="domain-select"
+                    value={selectedDomain}
+                    onChange={(e) => setSelectedDomain(e.target.value)}
+                    style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                >
+                    {PREDEFINED_DOMAINS.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                </select>
+                {selectedDomain === 'Other' && (
+                    <input
+                        type="text"
+                        value={customDomain}
+                        onChange={(e) => setCustomDomain(e.target.value)}
+                        placeholder="Enter custom domain"
+                        style={{ ...styles.input, marginLeft: '10px', width: '200px' }}
+                    />
+                )}
+            </div>
+
             <form onSubmit={handleCreateTile} style={styles.form}>
                 <textarea
                     style={styles.textarea}
@@ -102,7 +150,7 @@ export default function DmsEditor() {
             </form>
 
             {error && <p style={{ color: 'red' }}>{error}</p>}
-            {loading && <p>Loading tiles...</p>}
+            {loading && <p>Loading tiles for "{activeDomain}"...</p>} {/* Display activeDomain here */}
 
             <ul style={styles.tileList}>
                 {tiles.map(tile => (
@@ -116,6 +164,7 @@ export default function DmsEditor() {
                             >
                                 {tile.author_mark}
                             </span>
+                            <small>Domain: {tile.domain}</small> {/* Display domain here */}
                             <small>Last updated: {new Date(tile.updated_at).toLocaleString()}</small>
                         </div>
                         <p>{tile.content}</p>
