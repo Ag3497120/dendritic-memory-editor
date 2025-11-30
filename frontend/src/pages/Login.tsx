@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../apiClient';
 
-const API_BASE_URL = 'https://dendritic-memory-backend.nullai-db-app-face.workers.dev';
+const API_BASE_URL = 'https://nullai-medical-worker.nullai-db-app-face.workers.dev';
 
 export default function Login() {
     const [npiNumber, setNpiNumber] = useState('');
