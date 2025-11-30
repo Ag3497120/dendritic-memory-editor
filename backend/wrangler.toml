@@ -1,0 +1,21 @@
+name = "dendritic-memory-backend"
+main = "src/index.ts"
+compatibility_date = "2024-05-30"
+
+[vars]
+JWT_SECRET = "e58862cdb1ee26704a69c6af29bd8d3f3d38e95cf3b04c07c01182519024042f"
+FRONTEND_URL = "http://localhost:5173"
+
+# OAuth Providers
+GOOGLE_CLIENT_ID = "452469795796-m53ucgqg9egdfi8gglpmrqc68mqbj068.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "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"
+GITHUB_CLIENT_ID = "Ov23li9xyZence4fnnV5"
+GITHUB_CLIENT_SECRET = "a5219ebed011f955495c058e181163e61223bef3"
+ORCID_CLIENT_ID = "APP-DQ0EQF3GT5J4TP1W"
+ORCID_CLIENT_SECRET = "9a1e2d8c-17e8-416a-a8cd-388981e452e4"
+NPPES_API_URL = "https://npiregistry.cms.hhs.gov/api/"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dendritic-memory-db"
+database_id = "3a7be07a-fac1-4bcf-9860-3c34eb3baa77"
