@@ -151,6 +151,24 @@ export default function DmsEditor() {
         }
     };
 
+    const handleDownloadAllIath = async () => {
+        try {
+            const response = await apiClient.get('/api/db/iath/export', { // No domain parameter
+                responseType: 'blob',
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `all_tiles_${new Date().toISOString().split('T')[0]}.iath.json`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+        } catch (err) {
+            console.error('Failed to download all IATH export:', err);
+            setError('Failed to download all IATH export.');
+        }
+    };
+
     const handleImportIath = async () => {
         if (!iathFile) {
             setError('Please select an IATH file to import.');
@@ -166,7 +184,7 @@ export default function DmsEditor() {
         try {
             const response = await apiClient.post('/api/db/iath/import', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data', // Axios handles this for FormData
+                    'Content-Type': 'multipart/form-form-data', // Axios handles this for FormData
                 },
             });
             if (response.data.success) {
@@ -255,6 +273,9 @@ export default function DmsEditor() {
                     </button>
                     <button onClick={handleDownloadIath} style={{ ...styles.button, backgroundColor: '#17a2b8', color: 'white' }}>
                         Download IATH for "{activeDomain}"
+                    </button>
+                    <button onClick={handleDownloadAllIath} style={{ ...styles.button, backgroundColor: '#007bff', color: 'white' }}>
+                        Download All IATH
                     </button>
                     <label style={{ ...styles.button, backgroundColor: '#007bff', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexGrow: 1 }}>
                         Upload IATH File
