@@ -26,6 +26,7 @@ export default function DmsEditor() {
     const { user } = useAuth();
     const [tiles, setTiles] = useState<KnowledgeTile[]>([]);
     const [newTileContent, setNewTileContent] = useState('');
+    const [newTileTopic, setNewTileTopic] = useState(''); // New state for tile topic
     const [selectedDomain, setSelectedDomain] = useState('Medical'); // State for selected domain from dropdown
     const [customDomain, setCustomDomain] = useState(''); // State for custom domain input
     const [error, setError] = useState('');
@@ -68,6 +69,10 @@ export default function DmsEditor() {
     const handleCreateTile = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        if (!newTileTopic.trim()) { // New validation for topic
+            setError('Topic cannot be empty.');
+            return;
+        }
         if (!newTileContent.trim()) {
             setError('Content cannot be empty.');
             return;
@@ -79,11 +84,13 @@ export default function DmsEditor() {
 
         try {
             const response = await apiClient.post('/api/tiles', {
+                topic: newTileTopic, // Include newTileTopic
                 content: newTileContent,
                 domain: activeDomain, // Use activeDomain
             });
             setTiles([response.data, ...tiles]); // Add new tile to the top
-            setNewTileContent(''); // Clear input
+            setNewTileTopic(''); // Clear topic input
+            setNewTileContent(''); // Clear content input
             if (selectedDomain === 'Other') {
                 setCustomDomain(''); // Clear custom domain input as well
             }        } catch (err: any) {
@@ -169,6 +176,13 @@ export default function DmsEditor() {
             </div>
 
             <form onSubmit={handleCreateTile} style={styles.form}>
+                <input
+                    type="text"
+                    value={newTileTopic}
+                    onChange={(e) => setNewTileTopic(e.target.value)}
+                    placeholder="Enter tile topic (e.g., Photosynthesis Basics)"
+                    style={{ ...styles.input, marginBottom: '10px', width: '100%' }}
+                />
                 <textarea
                     style={styles.textarea}
                     value={newTileContent}
