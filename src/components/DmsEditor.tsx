@@ -107,6 +107,24 @@ export default function DmsEditor() {
         }
     };
 
+    const handleDownloadDb = async () => {
+        try {
+            const response = await apiClient.get('/api/db/export', {
+                responseType: 'blob', // Important for downloading files
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `db_export_${new Date().toISOString()}.json`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+        } catch (err) {
+            console.error('Failed to download DB export:', err);
+            setError('Failed to download DB export.');
+        }
+    };
+
     // Basic responsive styles
     const styles: { [key: string]: React.CSSProperties } = {
         editorContainer: { maxWidth: '800px', margin: '20px auto', padding: '0 15px' },
