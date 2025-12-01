@@ -175,6 +175,10 @@ export default function DmsEditor() {
             return;
         }
 
+        if (!window.confirm(`Are you sure you want to import "${iathFile.name}" and reflect its changes to the database? Existing tiles with matching IDs will be updated.`)) {
+            return; // User cancelled import
+        }
+
         const formData = new FormData();
         formData.append('file', iathFile);
         // Optional: override domain or authorId if needed
@@ -184,7 +188,7 @@ export default function DmsEditor() {
         try {
             const response = await apiClient.post('/api/db/iath/import', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-form-data', // Axios handles this for FormData
+                    'Content-Type': 'multipart/form-data', // Axios handles this for FormData
                 },
             });
             if (response.data.success) {
