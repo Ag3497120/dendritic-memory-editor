@@ -1,15 +1,14 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth'; // Use the new hook
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const { isLoggedIn, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    // While checking for authentication, render a loading state or null
-    return <div>Loading...</div>;
+    return <div>Loading session...</div>; // Or a spinner
   }
 
-  if (!isLoggedIn) {
+  if (!isAuthenticated) {
     // If not logged in after check, redirect to the login page
     return <Navigate to="/login" replace />;
   }

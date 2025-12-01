@@ -1,16 +1,17 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthHandler } from './components/AuthHandler';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import AuthCallback from './pages/AuthCallback';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <AuthProvider>
+    <HashRouter>
+      {/* This component will handle the auth token from the URL on any route */}
+      <AuthHandler />
+      
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route 
           path="/dashboard" 
           element={
@@ -21,7 +22,7 @@ function App() {
         />
         <Route path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
-    </AuthProvider>
+    </HashRouter>
   )
 }
 

@@ -1,24 +1,36 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../apiClient';
-
-const API_BASE_URL = 'https://dendritic-memory-backend.nullai-db-app-face.workers.dev';
+import { LoginButtons } from '../components/LoginButtons';
+import { jwtDecode } from 'jwt-decode';
 
 export default function Login() {
     const [npiNumber, setNpiNumber] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const { login } = useAuth();
+
+    const handleLoginSuccess = (token: string) => {
+        localStorage.setItem('authToken', token);
+        try {
+            // Decode token to get user info for localStorage, similar to AuthHandler
+            const decoded: any = jwtDecode(token);
+            if (decoded.sub) localStorage.setItem('user_id', decoded.sub);
+            if (decoded.email) localStorage.setItem('user_email', decoded.email);
+        } catch (e) {
+            console.error("Could not decode token from NPI/Guest login", e);
+        }
+        // Reload the page for the useAuth hook to pick up the new state
+        window.location.reload();
+    };
 
     const handleNpiLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         try {
-            const response = await apiClient.post('/api/auth/npi/verify', { npiNumber });
+            // This API endpoint might need to be adjusted
+            const response = await apiClient.post('/api/oauth/npi/verify', { npiNumber });
             if (response.data.token) {
-                login(response.data.token);
-                navigate('/dashboard');
+                handleLoginSuccess(response.data.token);
             }
         } catch (err: any) {
             setError(err.response?.data?.error || 'NPI login failed.');
@@ -28,10 +40,10 @@ export default function Login() {
     const handleGuestLogin = async () => {
         setError('');
         try {
-            const response = await apiClient.post('/api/auth/guest/login');
+            // This API endpoint might need to be adjusted
+            const response = await apiClient.post('/api/oauth/guest', {});
             if (response.data.token) {
-                login(response.data.token);
-                navigate('/dashboard');
+                handleLoginSuccess(response.data.token);
             }
         } catch (err: any) {
             setError(err.response?.data?.error || 'Guest login failed.');
@@ -41,9 +53,6 @@ export default function Login() {
     const styles: { [key: string]: React.CSSProperties } = {
         container: { maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', textAlign: 'center' },
         button: { display: 'block', width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: 'none', cursor: 'pointer', textDecoration: 'none', color: 'white' },
-        googleButton: { backgroundColor: '#4285F4' },
-        githubButton: { backgroundColor: '#333' },
-        orcidButton: { backgroundColor: '#A6CE39' },
         guestButton: { backgroundColor: '#6c757d'},
         npiForm: { marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '20px' },
         input: { width: 'calc(100% - 22px)', padding: '10px', marginBottom: '10px' },
@@ -55,9 +64,7 @@ export default function Login() {
         <div style={styles.container}>
             <h2>Login to Dendritic Memory Editor</h2>
             
-            <a href={`${API_BASE_URL}/api/oauth/google/login`} style={{...styles.button, ...styles.googleButton}}>Login with Google</a>
-            <a href={`${API_BASE_URL}/api/oauth/github/login`} style={{...styles.button, ...styles.githubButton}}>Login with GitHub</a>
-            <a href={`${API_BASE_URL}/api/oauth/orcid/login`} style={{...styles.button, ...styles.orcidButton}}>Login with ORCID</a>
+            <LoginButtons />
             
             <button onClick={handleGuestLogin} style={{...styles.button, ...styles.guestButton}}>Continue as Guest</button>
 
