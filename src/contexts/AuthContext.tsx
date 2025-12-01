@@ -5,6 +5,7 @@ interface AuthContextType {
     token: string | null;
     user: DecodedUser | null;
     isLoggedIn: boolean;
+    isLoading: boolean; // New loading state
     login: (token: string) => void;
     logout: () => void;
 }
@@ -28,55 +29,55 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [token, setToken] = useState<string | null>(localStorage.getItem('authToken'));
     const [user, setUser] = useState<DecodedUser | null>(null);
+    const [isLoading, setIsLoading] = useState(true); // Start as true on initial load
 
     useEffect(() => {
-        if (token) {
+        const initialToken = localStorage.getItem('authToken');
+        if (initialToken) {
             try {
-                const decoded = jwtDecode<DecodedUser>(token);
-                // Check if token is expired
+                const decoded = jwtDecode<DecodedUser>(initialToken);
                 if (decoded.exp * 1000 > Date.now()) {
                     setUser(decoded);
+                    setToken(initialToken);
                 } else {
-                    // Token is expired
-                    logout();
+                    localStorage.removeItem('authToken');
                 }
             } catch (error) {
-                console.error("Failed to decode token", error);
-                logout();
+                console.error("Failed to decode initial token", error);
+                localStorage.removeItem('authToken');
             }
-        } else {
-            setUser(null);
         }
-    }, [token]);
+        setIsLoading(false); // Finished initial check
+    }, []);
 
     const login = (newToken: string) => {
         try {
             const decoded = jwtDecode<DecodedUser>(newToken);
-            // Check if token is expired before setting it
             if (decoded.exp * 1000 > Date.now()) {
                 localStorage.setItem('authToken', newToken);
+                setUser(decoded);
                 setToken(newToken);
-                setUser(decoded); // Set user state immediately
             } else {
                 console.error("Attempted to login with an expired token.");
-                logout(); // Clear expired token
+                logout();
             }
         } catch (error) {
             console.error("Failed to decode token on login", error);
-            logout(); // Clear invalid token
+            logout();
         }
     };
 
     const logout = () => {
         localStorage.removeItem('authToken');
         setToken(null);
-        setUser(null); // Also clear user state
+        setUser(null);
     };
 
     const value = {
         token,
         user,
         isLoggedIn: !!user,
+        isLoading, // Expose loading state
         login,
         logout,
     };
