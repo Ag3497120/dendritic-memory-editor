@@ -288,7 +288,7 @@ export default function DmsEditor() {
                     </button>
                     <label style={{ ...styles.button, backgroundColor: '#007bff', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexGrow: 1 }}>
                         Upload IATH File
-                        <input type="file" accept=".iath.json,.json" style={{ display: 'none' }} onChange={(e) => setIathFile(e.target.files ? e.target.files[0] : null)} />
+                        <input type="file" accept=".iath,.iath.json,.json" style={{ display: 'none' }} onChange={(e) => setIathFile(e.target.files ? e.target.files[0] : null)} />
                     </label>
                     {iathFile && <button onClick={handleImportIath} style={{ ...styles.button, backgroundColor: '#28a745', color: 'white' }}>Import "{iathFile.name}"</button>}
                 </div>
