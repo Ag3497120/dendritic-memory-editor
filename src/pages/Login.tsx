@@ -62,7 +62,7 @@ export default function Login() {
 
     return (
         <div style={styles.container}>
-            <h2>Login to Dendritic Memory Editor</h2>
+            <h2>Login to Dendritic Memory Editor (v2)</h2>
             
             <LoginButtons />
             
