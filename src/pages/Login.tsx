@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom'; // Import Link
 import apiClient from '../apiClient';
 import { LoginButtons } from '../components/LoginButtons';
 import { jwtDecode } from 'jwt-decode';
@@ -14,7 +15,7 @@ export default function Login() {
             if (decoded.sub) localStorage.setItem('user_id', decoded.sub);
             if (decoded.email) localStorage.setItem('user_email', decoded.email);
         } catch (e) {
-            console.error("Could not decode token from NPI/Guest login", e);
+            console.error("Could not decode token from NPI login", e);
         }
         window.location.reload();
     };
@@ -35,18 +36,6 @@ export default function Login() {
             setError(err.response?.data?.error || 'NPI login failed.');
         }
     };
-    
-    const handleGuestLogin = async () => {
-        setError('');
-        try {
-            const response = await apiClient.post('/api/oauth/guest', {});
-            if (response.data.token) {
-                handleLoginSuccess(response.data.token);
-            }
-        } catch (err: any) {
-            setError(err.response?.data?.error || 'Guest login failed.');
-        }
-    };
 
     return (
         <div className="bg-slate-50 min-h-screen flex items-center justify-center">
@@ -59,12 +48,12 @@ export default function Login() {
                 <div className="space-y-4">
                     <LoginButtons />
                     
-                    <button 
-                        onClick={handleGuestLogin} 
-                        className="w-full py-3 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-300 font-semibold"
+                    <Link 
+                        to="/all-tiles"
+                        className="block text-center w-full py-3 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-300 font-semibold"
                     >
                         Continue as Guest
-                    </button>
+                    </Link>
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-gray-200">

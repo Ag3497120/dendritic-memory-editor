@@ -23,13 +23,10 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        {/* Publicly accessible route for guests */}
         <Route 
           path="/all-tiles" 
-          element={
-            <ProtectedRoute>
-              <AllTiles />
-            </ProtectedRoute>
-          } 
+          element={<AllTiles />} 
         />
 
         {/* Fallback route */}

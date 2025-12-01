@@ -67,7 +67,7 @@ export default function AllTiles() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         {tiles.map(tile => (
-                            <TileCard key={tile.id} tile={tile} onDelete={() => {}} />
+                            <TileCard key={tile.id} tile={tile} />
                         ))}
                     </div>
                 )}
