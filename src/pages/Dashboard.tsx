@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import DmsEditor from '../components/DmsEditor';
 
 export default function Dashboard() {
@@ -8,7 +8,7 @@ export default function Dashboard() {
 
     const handleLogout = () => {
         logout();
-        navigate('/login');
+        // The logout function in the new hook already handles navigation and reload.
     };
 
     const styles: { [key: string]: React.CSSProperties } = {
@@ -38,8 +38,7 @@ export default function Dashboard() {
             <header style={styles.header}>
                 {user ? (
                     <p style={styles.userInfo}>
-                        Logged in as: <strong>{user.userId}</strong> 
-                        (Expert: {user.isExpert ? 'Yes' : 'No'})
+                        Logged in as: <strong>{user.email || user.id}</strong> 
                     </p>
                 ) : (
                     <p style={styles.userInfo}>Loading user...</p>
