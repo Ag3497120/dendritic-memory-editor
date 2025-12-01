@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
 import { useAuth } from '../contexts/AuthContext';
+import { IathExportButton } from './IathExport';
+import { IathImportButton } from './IathImport';
 
 interface KnowledgeTile {
     id: string;
@@ -32,7 +34,6 @@ export default function DmsEditor() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
     const [dbStats, setDbStats] = useState<any>(null); // New state for DB stats
-    const [iathFile, setIathFile] = useState<File | null>(null); // New state for IATH import file
 
     // Determine the active domain based on selection
     const activeDomain = selectedDomain === 'Other' ? customDomain : selectedDomain;
@@ -133,80 +134,6 @@ export default function DmsEditor() {
         }
     };
 
-    const handleDownloadIath = async (format: 'json' | 'binary' = 'json') => {
-        try {
-            const url = `/api/db/iath/export?domain=${activeDomain}${format === 'binary' ? '&format=binary' : ''}`;
-            const response = await apiClient.get(url, {
-                responseType: 'blob', // Important for downloading files
-            });
-            const blob = new Blob([response.data], { type: format === 'binary' ? 'application/octet-stream' : 'application/json' });
-            const url_object = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url_object;
-            link.setAttribute('download', `${activeDomain.toLowerCase()}_tiles_${new Date().toISOString().split('T')[0]}.iath${format === 'binary' ? '' : '.json'}`);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode?.removeChild(link);
-        } catch (err) {
-            console.error('Failed to download IATH export:', err);
-            setError('Failed to download IATH export.');
-        }
-    };
-
-    const handleDownloadAllIath = async () => {
-        try {
-            const response = await apiClient.get('/api/db/iath/export', { // No domain parameter
-                responseType: 'blob',
-            });
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `all_tiles_${new Date().toISOString().split('T')[0]}.iath.json`);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode?.removeChild(link);
-        } catch (err) {
-            console.error('Failed to download all IATH export:', err);
-            setError('Failed to download all IATH export.');
-        }
-    };
-
-    const handleImportIath = async () => {
-        if (!iathFile) {
-            setError('Please select an IATH file to import.');
-            return;
-        }
-
-        if (!window.confirm(`Are you sure you want to import "${iathFile.name}" and reflect its changes to the database? Existing tiles with matching IDs will be updated.`)) {
-            return; // User cancelled import
-        }
-
-        const formData = new FormData();
-        formData.append('file', iathFile);
-        // Optional: override domain or authorId if needed
-        // formData.append('domain', 'Science');
-        // formData.append('authorId', 'ai-system-001');
-
-        try {
-            const response = await apiClient.post('/api/db/iath/import', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data', // Axios handles this for FormData
-                },
-            });
-            if (response.data.success) {
-                alert(`Successfully imported ${response.data.imported_count} tiles.`);
-                setIathFile(null); // Clear file input
-                fetchTiles(); // Refresh tiles
-                fetchDbStats(); // Refresh stats
-            } else {
-                setError(response.data.error || 'IATH import failed.');
-            }
-        } catch (err: any) {
-            console.error('Failed to import IATH:', err);
-            setError(err.response?.data?.details || err.message || 'Failed to import IATH.');
-        }
-    };
-
     // Basic responsive styles
     const styles: { [key: string]: React.CSSProperties } = {
         editorContainer: { maxWidth: '800px', margin: '20px auto', padding: '0 15px' },
@@ -273,24 +200,12 @@ export default function DmsEditor() {
             {/* DB Stats and Export Section */}
             <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
                 <h3>Database Status & Management</h3>
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', flexWrap: 'wrap' }}>
-                    <button onClick={handleDownloadDb} style={{ ...styles.button, backgroundColor: '#28a45', color: 'white' }}>
-                        Download All Data (JSON)
+                <div style={{ display: 'flex', gap: '15px', marginBottom: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button onClick={handleDownloadDb} style={{ ...styles.button, backgroundColor: '#6c757d', color: 'white' }}>
+                        Download DB (SQL)
                     </button>
-                    <button onClick={handleDownloadIath} style={{ ...styles.button, backgroundColor: '#17a2b8', color: 'white' }}>
-                        Download IATH for "{activeDomain}"
-                    </button>
-                    <button onClick={handleDownloadAllIath} style={{ ...styles.button, backgroundColor: '#007bff', color: 'white' }}>
-                        Download All IATH
-                    </button>
-                    <button onClick={() => handleDownloadIath('binary')} style={{ ...styles.button, backgroundColor: '#007bff', color: 'white' }}> {/* New Binary Download */}
-                        Download IATH (Binary)
-                    </button>
-                    <label style={{ ...styles.button, backgroundColor: '#007bff', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexGrow: 1 }}>
-                        Upload IATH File
-                        <input type="file" accept=".iath,.iath.json,.json" style={{ display: 'none' }} onChange={(e) => setIathFile(e.target.files ? e.target.files[0] : null)} />
-                    </label>
-                    {iathFile && <button onClick={handleImportIath} style={{ ...styles.button, backgroundColor: '#28a745', color: 'white' }}>Import "{iathFile.name}"</button>}
+                    <IathExportButton domain={activeDomain} />
+                    <IathImportButton />
                 </div>
                 {dbStats && (
                     <div>

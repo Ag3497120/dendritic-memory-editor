@@ -3,12 +3,13 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function AuthCallback() {
-    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { login } = useAuth();
 
     useEffect(() => {
-        const token = searchParams.get('token');
+        const hash = window.location.hash;
+        const params = new URLSearchParams(hash.split('?')[1]); // Extract query params from hash
+        const token = params.get('token');
 
         if (token) {
             login(token);
