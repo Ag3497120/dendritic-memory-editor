@@ -133,15 +133,17 @@ export default function DmsEditor() {
         }
     };
 
-    const handleDownloadIath = async () => {
+    const handleDownloadIath = async (format: 'json' | 'binary' = 'json') => {
         try {
-            const response = await apiClient.get(`/api/db/iath/export?domain=${activeDomain}`, {
-                responseType: 'blob',
+            const url = `/api/db/iath/export?domain=${activeDomain}${format === 'binary' ? '&format=binary' : ''}`;
+            const response = await apiClient.get(url, {
+                responseType: 'blob', // Important for downloading files
             });
-            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const blob = new Blob([response.data], { type: format === 'binary' ? 'application/octet-stream' : 'application/json' });
+            const url_object = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `${activeDomain.toLowerCase()}_tiles_${new Date().toISOString().split('T')[0]}.iath.json`);
+            link.href = url_object;
+            link.setAttribute('download', `${activeDomain.toLowerCase()}_tiles_${new Date().toISOString().split('T')[0]}.iath${format === 'binary' ? '' : '.json'}`);
             document.body.appendChild(link);
             link.click();
             link.parentNode?.removeChild(link);
@@ -280,6 +282,9 @@ export default function DmsEditor() {
                     </button>
                     <button onClick={handleDownloadAllIath} style={{ ...styles.button, backgroundColor: '#007bff', color: 'white' }}>
                         Download All IATH
+                    </button>
+                    <button onClick={() => handleDownloadIath('binary')} style={{ ...styles.button, backgroundColor: '#007bff', color: 'white' }}> {/* New Binary Download */}
+                        Download IATH (Binary)
                     </button>
                     <label style={{ ...styles.button, backgroundColor: '#007bff', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexGrow: 1 }}>
                         Upload IATH File
