@@ -6,7 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <HashRouter>
+    <>
       {/* This component will handle the auth token from the URL on any route */}
       <AuthHandler />
       
@@ -22,7 +22,7 @@ function App() {
         />
         <Route path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
-    </HashRouter>
+    </>
   )
 }
 
