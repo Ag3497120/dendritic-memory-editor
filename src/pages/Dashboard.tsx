@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import apiClient from '../apiClient';
 
@@ -105,7 +106,10 @@ export default function Dashboard() {
                         <h1 className="text-xl font-bold text-gray-900">Dendritic Memory</h1>
                         <div className="flex items-center space-x-4">
                             <span className="text-sm text-gray-600 hidden sm:block">
-                                Logged in as: <strong>{user?.email || '...'}</strong>
+                                {user?.isExpert 
+                                    ? 'You are editing as an Expert member.' 
+                                    : 'You are editing as a Community member.'
+                                }
                             </span>
                             <button onClick={logout} className="text-sm font-medium text-red-600 hover:text-red-800">
                                 Logout
@@ -160,8 +164,13 @@ export default function Dashboard() {
                             {/* Management Actions */}
                             <div className="border-t pt-6 space-y-4">
                                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Management</h3>
-                                <IathExportButton domain={activeDomain} />
-                                <IathImportButton />
+                                <div className="flex flex-col space-y-2">
+                                    <IathExportButton domain={activeDomain} />
+                                    <IathImportButton />
+                                    <Link to="/all-tiles" className="w-full text-center px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 transition-colors">
+                                        View All Tiles
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     </aside>
