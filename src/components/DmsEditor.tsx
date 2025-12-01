@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { IathExportButton } from './IathExport';
 import { IathImportButton } from './IathImport';
 
@@ -152,7 +152,11 @@ export default function DmsEditor() {
     return (
         <div style={styles.editorContainer}>
             <h2>Dendritic Memory Editor</h2>
-            {user && <p>You are editing as an <b>{user.isExpert ? 'Expert' : 'Community'}</b> member.</p>}
+            {user ? (
+                <p>You are editing as: <b>{user.email}</b></p>
+            ) : (
+                <p>Loading user...</p>
+            )}
             
             <div style={{ marginBottom: '20px' }}>
                 <label htmlFor="domain-select" style={{ marginRight: '10px' }}>Select Domain:</label>
