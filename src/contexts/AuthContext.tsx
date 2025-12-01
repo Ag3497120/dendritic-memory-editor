@@ -50,13 +50,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [token]);
 
     const login = (newToken: string) => {
-        localStorage.setItem('authToken', newToken);
-        setToken(newToken);
+        try {
+            const decoded = jwtDecode<DecodedUser>(newToken);
+            // Check if token is expired before setting it
+            if (decoded.exp * 1000 > Date.now()) {
+                localStorage.setItem('authToken', newToken);
+                setToken(newToken);
+                setUser(decoded); // Set user state immediately
+            } else {
+                console.error("Attempted to login with an expired token.");
+                logout(); // Clear expired token
+            }
+        } catch (error) {
+            console.error("Failed to decode token on login", error);
+            logout(); // Clear invalid token
+        }
     };
 
     const logout = () => {
         localStorage.removeItem('authToken');
         setToken(null);
+        setUser(null); // Also clear user state
     };
 
     const value = {
