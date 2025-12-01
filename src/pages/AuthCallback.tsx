@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function AuthCallback() {
@@ -18,7 +18,7 @@ export default function AuthCallback() {
             // Handle error or no token case
             navigate('/login', { replace: true });
         }
-    }, [searchParams, login, navigate]);
+    }, [login, navigate]);
 
     return (
         <div>
