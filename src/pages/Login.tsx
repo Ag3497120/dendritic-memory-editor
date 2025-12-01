@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
 import { LoginButtons } from '../components/LoginButtons';
 import { jwtDecode } from 'jwt-decode';
@@ -7,27 +6,27 @@ import { jwtDecode } from 'jwt-decode';
 export default function Login() {
     const [npiNumber, setNpiNumber] = useState('');
     const [error, setError] = useState('');
-    const navigate = useNavigate();
 
     const handleLoginSuccess = (token: string) => {
         localStorage.setItem('authToken', token);
         try {
-            // Decode token to get user info for localStorage, similar to AuthHandler
             const decoded: any = jwtDecode(token);
             if (decoded.sub) localStorage.setItem('user_id', decoded.sub);
             if (decoded.email) localStorage.setItem('user_email', decoded.email);
         } catch (e) {
             console.error("Could not decode token from NPI/Guest login", e);
         }
-        // Reload the page for the useAuth hook to pick up the new state
         window.location.reload();
     };
 
     const handleNpiLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        if (!npiNumber.trim()) {
+            setError('NPI number cannot be empty.');
+            return;
+        }
         try {
-            // This API endpoint might need to be adjusted
             const response = await apiClient.post('/api/oauth/npi/verify', { npiNumber });
             if (response.data.token) {
                 handleLoginSuccess(response.data.token);
@@ -40,7 +39,6 @@ export default function Login() {
     const handleGuestLogin = async () => {
         setError('');
         try {
-            // This API endpoint might need to be adjusted
             const response = await apiClient.post('/api/oauth/guest', {});
             if (response.data.token) {
                 handleLoginSuccess(response.data.token);
@@ -50,38 +48,47 @@ export default function Login() {
         }
     };
 
-    const styles: { [key: string]: React.CSSProperties } = {
-        container: { maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', textAlign: 'center' },
-        button: { display: 'block', width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: 'none', cursor: 'pointer', textDecoration: 'none', color: 'white' },
-        guestButton: { backgroundColor: '#6c757d'},
-        npiForm: { marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '20px' },
-        input: { width: 'calc(100% - 22px)', padding: '10px', marginBottom: '10px' },
-        npiButton: { backgroundColor: '#007bff' },
-        error: { color: 'red', marginTop: '10px' }
-    };
-
     return (
-        <div style={styles.container}>
-            <h2>Login to Dendritic Memory Editor (v2)</h2>
-            
-            <LoginButtons />
-            
-            <button onClick={handleGuestLogin} style={{...styles.button, ...styles.guestButton}}>Continue as Guest</button>
+        <div className="bg-slate-50 min-h-screen flex items-center justify-center">
+            <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
+                <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold text-gray-800">Login to Dendritic Memory</h2>
+                    <p className="text-gray-500">Choose a provider to continue</p>
+                </div>
+                
+                <div className="space-y-4">
+                    <LoginButtons />
+                    
+                    <button 
+                        onClick={handleGuestLogin} 
+                        className="w-full py-3 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-300 font-semibold"
+                    >
+                        Continue as Guest
+                    </button>
+                </div>
 
-            <div style={styles.npiForm}>
-                <h3>NPI Login (for US Medical Experts)</h3>
-                <form onSubmit={handleNpiLogin}>
-                    <input 
-                        type="text" 
-                        value={npiNumber}
-                        onChange={(e) => setNpiNumber(e.target.value)}
-                        placeholder="Enter your 10-digit NPI number"
-                        style={styles.input}
-                    />
-                    <button type="submit" style={{...styles.button, ...styles.npiButton}}>Login with NPI</button>
-                </form>
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-700 text-center mb-4">NPI Login
+                        <span className="ml-2 text-sm font-normal text-gray-500">(for US Medical Experts)</span>
+                    </h3>
+                    <form onSubmit={handleNpiLogin} className="space-y-4">
+                        <input 
+                            type="text" 
+                            value={npiNumber}
+                            onChange={(e) => setNpiNumber(e.target.value)}
+                            placeholder="Enter your 10-digit NPI number"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                        />
+                        <button 
+                            type="submit" 
+                            className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 font-semibold"
+                        >
+                            Login with NPI
+                        </button>
+                    </form>
+                </div>
+                {error && <p className="mt-4 text-center text-red-500 text-sm">{error}</p>}
             </div>
-            {error && <p style={styles.error}>{error}</p>}
         </div>
     );
 }
