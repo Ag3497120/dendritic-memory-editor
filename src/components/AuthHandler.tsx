@@ -8,9 +8,13 @@ export function AuthHandler() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    // URLパラメータをチェック
-    // In HashRouter, search is in the hash. But the new backend redirects to the root with query params.
-    const params = new URLSearchParams(window.location.search);
+    // For HashRouter, params are in the hash. e.g., /#/?token=...
+    const hash = window.location.hash;
+    if (!hash.includes('?')) {
+        return; // No params to process
+    }
+
+    const params = new URLSearchParams(hash.substring(hash.indexOf('?')));
     const token = params.get('token');
     const userId = params.get('user_id');
     const email = params.get('email');
@@ -19,37 +23,28 @@ export function AuthHandler() {
     if (error) {
       console.error('OAuth error from backend:', error);
       alert(`Login failed: ${error}`);
-      // エラーパラメータを削除
-      navigate('/', { replace: true });
+      window.location.hash = '/'; // Clear hash
       return;
     }
 
     if (token && !isProcessing) {
       setIsProcessing(true);
       
-      // トークンをlocalStorageに保存
+      // Save token and user info to localStorage
       localStorage.setItem('authToken', token);
-      
-      if (userId) {
-        localStorage.setItem('user_id', userId);
-      }
-      
-      if (email) {
-        localStorage.setItem('user_email', email);
-      }
+      if (userId) localStorage.setItem('user_id', userId);
+      if (email) localStorage.setItem('user_email', email);
 
       console.log('Auth token saved:', token.substring(0, 20) + '...');
 
-      // URLからクエリパラメータを削除してリダイレクト
-      // We are using HashRouter, so we navigate to the root hash.
-      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash.split('?')[0]);
-
-      // ページをリロードして認証状態を反映
+      // Clean the hash and reload the page to apply the auth state
+      window.location.hash = '/';
+      
       setTimeout(() => {
         window.location.reload();
       }, 50);
     }
-  }, [location.search, navigate, isProcessing]);
+  }, [location, navigate, isProcessing]);
 
   return null; // このコンポーネントは何も表示しない
 }
