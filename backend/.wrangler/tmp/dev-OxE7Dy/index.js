@@ -2355,9 +2355,8 @@ google.get("/callback", async (c) => {
     isExpert: user.is_expert === 1,
     provider: "google"
   }, c.env);
-  const callbackUrl = new URL(`/auth/callback`, c.env.FRONTEND_URL);
-  callbackUrl.searchParams.set("token", appToken);
-  return c.redirect(callbackUrl.toString());
+  const callbackUrl = `${c.env.FRONTEND_URL}/#/auth/callback?token=${encodeURIComponent(appToken)}`;
+  return c.redirect(callbackUrl);
 });
 var google_default = google;
 
@@ -2425,9 +2424,8 @@ github.get("/callback", async (c) => {
     isExpert: user.is_expert === 1,
     provider: "github"
   }, c.env);
-  const callbackUrl = new URL(`/auth/callback`, c.env.FRONTEND_URL);
-  callbackUrl.searchParams.set("token", appToken);
-  return c.redirect(callbackUrl.toString());
+  const callbackUrl = `${c.env.FRONTEND_URL}/#/auth/callback?token=${encodeURIComponent(appToken)}`;
+  return c.redirect(callbackUrl);
 });
 var github_default = github;
 
@@ -2498,9 +2496,8 @@ orcid.get("/callback", async (c) => {
     isExpert: user.is_expert === 1,
     provider: "orcid"
   }, c.env);
-  const callbackUrl = new URL(`/auth/callback`, c.env.FRONTEND_URL);
-  callbackUrl.searchParams.set("token", appToken);
-  return c.redirect(callbackUrl.toString());
+  const callbackUrl = `${c.env.FRONTEND_URL}/#/auth/callback?token=${encodeURIComponent(appToken)}`;
+  return c.redirect(callbackUrl);
 });
 var orcid_default = orcid;
 

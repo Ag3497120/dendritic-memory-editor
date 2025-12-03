@@ -94,12 +94,12 @@ orcid.get('/callback', async (c) => {
         isExpert: user.is_expert === 1,
         provider: 'orcid'
     }, c.env);
-    
+
     // Redirect to the frontend callback page with the token
-    const callbackUrl = new URL(`/auth/callback`, c.env.FRONTEND_URL);
-    callbackUrl.searchParams.set('token', appToken);
-    
-    return c.redirect(callbackUrl.toString());
+    // Use hash-based routing format for React HashRouter
+    const callbackUrl = `${c.env.FRONTEND_URL}/#/auth/callback?token=${encodeURIComponent(appToken)}`;
+
+    return c.redirect(callbackUrl);
 });
 
 
