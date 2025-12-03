@@ -6,11 +6,11 @@ const API_BASE_URL = 'https://dendritic-memory-backend.nullai-db-app-face.worker
 export function LoginButtons() {
   const handleGoogleLogin = () => {
     // Google OAuth ページにリダイレクト
-    window.location.href = `${API_BASE_URL}/api/oauth/google/login`;
+    window.location.href = `${API_BASE_URL}/api/auth/google/login`;
   };
 
   const handleOrcidLogin = () => {
-    window.location.href = `${API_BASE_URL}/api/oauth/orcid/login`;
+    window.location.href = `${API_BASE_URL}/api/auth/orcid/login`;
   };
 
   return (
