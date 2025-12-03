@@ -8,9 +8,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   return (
     <>
-      {/* This component will handle the auth token from the URL on any route */}
-      <AuthHandler />
-
       <Routes>
         <Route path="/login" element={<Login />} />
 
