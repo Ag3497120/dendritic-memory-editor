@@ -84,7 +84,12 @@ github.get('/callback', async (c) => {
     }
 
     // Create a JWT for our app
-    const appToken = await createToken({ userId: user.id, isExpert: user.is_expert === 1 }, c.env);
+    const appToken = await createToken({
+        userId: user.id,
+        username: user.username as string || githubUser.login,
+        isExpert: user.is_expert === 1,
+        provider: 'github'
+    }, c.env);
     
     // Redirect to the frontend callback page with the token
     const callbackUrl = new URL(`/auth/callback`, c.env.FRONTEND_URL);

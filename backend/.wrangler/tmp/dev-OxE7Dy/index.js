@@ -2267,7 +2267,14 @@ var createToken = /* @__PURE__ */ __name(async (payload, env) => {
   if (!secret) {
     throw new Error("JWT_SECRET is not defined in the environment.");
   }
-  const token = await sign2(payload, secret);
+  const now = Math.floor(Date.now() / 1e3);
+  const tokenPayload = {
+    ...payload,
+    iat: now,
+    exp: now + 7 * 24 * 60 * 60
+    // 7 days
+  };
+  const token = await sign2(tokenPayload, secret);
   return token;
 }, "createToken");
 var verifyToken = /* @__PURE__ */ __name(async (token, env) => {
@@ -2342,7 +2349,12 @@ google.get("/callback", async (c) => {
   if (!user || typeof user.id !== "string" || typeof user.is_expert !== "number") {
     return c.json({ error: "Failed to create or retrieve user" }, 500);
   }
-  const appToken = await createToken({ userId: user.id, isExpert: user.is_expert === 1 }, c.env);
+  const appToken = await createToken({
+    userId: user.id,
+    username: user.username || googleUser.name || "Unknown",
+    isExpert: user.is_expert === 1,
+    provider: "google"
+  }, c.env);
   const callbackUrl = new URL(`/auth/callback`, c.env.FRONTEND_URL);
   callbackUrl.searchParams.set("token", appToken);
   return c.redirect(callbackUrl.toString());
@@ -2407,7 +2419,12 @@ github.get("/callback", async (c) => {
   if (!user || typeof user.id !== "string" || typeof user.is_expert !== "number") {
     return c.json({ error: "Failed to create or retrieve user" }, 500);
   }
-  const appToken = await createToken({ userId: user.id, isExpert: user.is_expert === 1 }, c.env);
+  const appToken = await createToken({
+    userId: user.id,
+    username: user.username || githubUser.login,
+    isExpert: user.is_expert === 1,
+    provider: "github"
+  }, c.env);
   const callbackUrl = new URL(`/auth/callback`, c.env.FRONTEND_URL);
   callbackUrl.searchParams.set("token", appToken);
   return c.redirect(callbackUrl.toString());
@@ -2475,7 +2492,12 @@ orcid.get("/callback", async (c) => {
   if (!user || typeof user.id !== "string" || typeof user.is_expert !== "number") {
     return c.json({ error: "Failed to create or retrieve user" }, 500);
   }
-  const appToken = await createToken({ userId: user.id, isExpert: user.is_expert === 1 }, c.env);
+  const appToken = await createToken({
+    userId: user.id,
+    username: user.username || orcidName,
+    isExpert: user.is_expert === 1,
+    provider: "orcid"
+  }, c.env);
   const callbackUrl = new URL(`/auth/callback`, c.env.FRONTEND_URL);
   callbackUrl.searchParams.set("token", appToken);
   return c.redirect(callbackUrl.toString());
@@ -2494,7 +2516,12 @@ guest.post("/login", async (c) => {
   if (!user || typeof user.id !== "string" || typeof user.is_expert !== "number") {
     return c.json({ error: "Failed to create guest user" }, 500);
   }
-  const appToken = await createToken({ userId: user.id, isExpert: user.is_expert === 1 }, c.env);
+  const appToken = await createToken({
+    userId: user.id,
+    username: user.username || "Guest User",
+    isExpert: user.is_expert === 1,
+    provider: "guest"
+  }, c.env);
   return c.json({ token: appToken });
 });
 var guest_default = guest;
@@ -2547,8 +2574,13 @@ npi.post("/verify", async (c) => {
       return c.json({ error: "Invalid or unverified NPI" }, 400);
     }
     await db.prepare("UPDATE users SET provider_id = ?, username = ?, is_expert = 1, npi = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").bind(npiNumber, providerName, npiNumber, user.userId).run();
-    const updatedUser = await db.prepare("SELECT id, is_expert FROM users WHERE id = ?").bind(user.userId).first();
-    const appToken = await createToken({ userId: updatedUser.id, isExpert: updatedUser.is_expert === 1 }, c.env);
+    const updatedUser = await db.prepare("SELECT id, is_expert, username, provider FROM users WHERE id = ?").bind(user.userId).first();
+    const appToken = await createToken({
+      userId: updatedUser.id,
+      username: updatedUser.username || providerName || "Unknown",
+      isExpert: updatedUser.is_expert === 1,
+      provider: updatedUser.provider || "npi"
+    }, c.env);
     return c.json({ message: "NPI registered and verified successfully", npi: npiNumber, is_expert: true, token: appToken });
   } catch (e) {
     console.error("Error registering NPI:", e.message);

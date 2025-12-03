@@ -22,7 +22,12 @@ guest.post('/login', async (c) => {
     }
 
     // Create a JWT for the guest session
-    const appToken = await createToken({ userId: user.id, isExpert: user.is_expert === 1 }, c.env);
+    const appToken = await createToken({
+        userId: user.id,
+        username: user.username as string || 'Guest User',
+        isExpert: user.is_expert === 1,
+        provider: 'guest'
+    }, c.env);
 
     return c.json({ token: appToken });
 });

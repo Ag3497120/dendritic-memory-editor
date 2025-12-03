@@ -70,9 +70,14 @@ npi.post('/verify', async (c) => {
         // 3. Update user's NPI and verification status
         await db.prepare("UPDATE users SET provider_id = ?, username = ?, is_expert = 1, npi = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").bind(npiNumber, providerName, npiNumber, user.userId).run();
 
-        const updatedUser = await db.prepare("SELECT id, is_expert FROM users WHERE id = ?").bind(user.userId).first();
+        const updatedUser = await db.prepare("SELECT id, is_expert, username, provider FROM users WHERE id = ?").bind(user.userId).first();
 
-        const appToken = await createToken({ userId: updatedUser.id, isExpert: updatedUser.is_expert === 1 }, c.env);
+        const appToken = await createToken({
+            userId: updatedUser.id as string,
+            username: updatedUser.username as string || providerName || 'Unknown',
+            isExpert: updatedUser.is_expert === 1,
+            provider: updatedUser.provider as string || 'npi'
+        }, c.env);
 
         return c.json({ message: 'NPI registered and verified successfully', npi: npiNumber, is_expert: true, token: appToken });
 

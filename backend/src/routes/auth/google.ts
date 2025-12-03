@@ -87,7 +87,12 @@ google.get('/callback', async (c) => {
          return c.json({ error: 'Failed to create or retrieve user' }, 500);
     }
 
-    const appToken = await createToken({ userId: user.id, isExpert: user.is_expert === 1 }, c.env);
+    const appToken = await createToken({
+        userId: user.id,
+        username: user.username as string || googleUser.name || 'Unknown',
+        isExpert: user.is_expert === 1,
+        provider: 'google'
+    }, c.env);
 
     // Redirect to the frontend callback page with the token
     const callbackUrl = new URL(`/auth/callback`, c.env.FRONTEND_URL);
