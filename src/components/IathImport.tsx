@@ -11,16 +11,16 @@ export function IathImportButton() {
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
     setIsImporting(true);
-    
+
     try {
-      // Assuming a token is stored in localStorage for auth
-      const token = localStorage.getItem('auth_token');
-      
+      // Get token from localStorage (key is 'authToken')
+      const token = localStorage.getItem('authToken');
+
       const formData = new FormData();
       formData.append('file', file);
-      
+
       const response = await fetch(`${API_BASE_URL}/api/tiles/iath/import`, {
         method: 'POST',
         headers: {
