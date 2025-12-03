@@ -66,12 +66,8 @@ export function AuthHandler() {
 
       console.log('Auth token saved:', token.substring(0, 20) + '...');
 
-      // Redirect to home page
-      navigate('/');
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 50);
+      // Redirect to home page with full page reload to reinitialize auth state
+      window.location.href = window.location.origin + '/#/';
     } else {
       console.log('AuthHandler: No token or already processing');
     }
