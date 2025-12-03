@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import google from './routes/auth/google'
 import github from './routes/auth/github'
 import orcid from './routes/auth/orcid'
@@ -7,6 +8,14 @@ import npi from './routes/auth/npi'
 import tiles from './routes/tiles'
 
 const app = new Hono()
+
+// CORS configuration
+app.use('*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}))
 
 app.get('/', (c) => {
   return c.text('Hello from Dendritic Memory Editor Backend!')

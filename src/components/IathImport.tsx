@@ -1,8 +1,8 @@
 // frontend/src/components/IathImport.tsx
 import React, { useState, useRef } from 'react';
 
-// This should be in a central config file, but defined here for simplicity
-const API_BASE_URL = 'https://dendritic-memory-backend.nullai-db-app-face.workers.dev';
+// Use the same API URL from environment variable
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
 
 export function IathImportButton() {
   const [isImporting, setIsImporting] = useState(false);
@@ -21,10 +21,10 @@ export function IathImportButton() {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await fetch(`${API_BASE_URL}/api/db/iath/import`, {
+      const response = await fetch(`${API_BASE_URL}/api/tiles/iath/import`, {
         method: 'POST',
         headers: {
-          // 'Authorization': `Bearer ${token}` // Assuming backend requires auth
+          'Authorization': `Bearer ${token}` // Backend requires auth
         },
         body: formData
       });

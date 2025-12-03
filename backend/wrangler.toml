@@ -18,4 +18,4 @@ NPPES_API_URL = "https://npiregistry.cms.hhs.gov/api/"
 [[d1_databases]]
 binding = "DB"
 database_name = "dendritic-memory-db"
-database_id = "3a7be07a-fac1-4bcf-9860-3c34eb3baa77"
+database_id = "e47faba9-9a04-4dad-a6c8-e3db8f36b091"
