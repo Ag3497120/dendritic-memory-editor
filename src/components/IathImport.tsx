@@ -35,14 +35,22 @@ export function IathImportButton() {
         throw new Error(result.details || result.error || 'Import failed');
       }
 
-      alert(`Successfully imported ${result.imported} tiles to ${result.domain}`);
-      
+      let message = `Successfully imported ${result.imported} of ${result.total} tiles to ${result.domain}`;
+
+      if (result.errors && result.errors.length > 0) {
+        message += `\n\nErrors encountered:\n${result.errors.join('\n')}`;
+      }
+
+      alert(message);
+
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-      
+
       // Reload the page to show the new tiles
-      window.location.reload();
+      if (result.imported > 0) {
+        window.location.reload();
+      }
       
     } catch (error: any) {
       console.error('Import error:', error);

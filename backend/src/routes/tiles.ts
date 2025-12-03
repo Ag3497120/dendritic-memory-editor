@@ -177,19 +177,42 @@ tiles.post('/iath/import', async (c) => {
         }
 
         // Validate .iath format
+        console.log('Parsed iathData:', JSON.stringify(iathData, null, 2));
+        console.log('iathData.tiles type:', typeof iathData.tiles);
+        console.log('iathData.tiles isArray:', Array.isArray(iathData.tiles));
+        console.log('iathData.tiles length:', iathData.tiles?.length);
+
         if (!iathData.version || !iathData.header || !iathData.tiles || !Array.isArray(iathData.tiles)) {
-            return c.json({ error: 'Invalid .iath file format' }, 400);
+            return c.json({
+                error: 'Invalid .iath file format',
+                details: {
+                    hasVersion: !!iathData.version,
+                    hasHeader: !!iathData.header,
+                    hasTiles: !!iathData.tiles,
+                    tilesIsArray: Array.isArray(iathData.tiles),
+                    tilesType: typeof iathData.tiles
+                }
+            }, 400);
         }
 
         const domain = iathData.header.domain || 'General';
         const db = getDb(c);
         let imported = 0;
+        const errors: string[] = [];
+
+        console.log(`Starting import of ${iathData.tiles.length} tiles to domain: ${domain}`);
 
         // Import each tile
         for (const tile of iathData.tiles) {
             try {
                 const tileId = tile.id || uuidv4();
                 const content = tile.content || tile.title || '';
+
+                if (!content) {
+                    errors.push(`Tile ${tileId}: No content found`);
+                    continue;
+                }
+
                 const coords = tile.coordinates || {};
                 const x = coords.x !== undefined ? coords.x : Math.random() * 100;
                 const y = coords.y !== undefined ? coords.y : Math.random() * 100;
@@ -203,8 +226,10 @@ tiles.post('/iath/import', async (c) => {
                     authorMark = tile.author_mark;
                 }
 
+                console.log(`Importing tile ${tileId}: content length=${content.length}, coords=(${x},${y},${z})`);
+
                 // Insert or update tile
-                await db.execute({
+                const result = await db.execute({
                     sql: `INSERT INTO knowledge_tiles (id, domain, content, coordinates_x, coordinates_y, coordinates_z, author_id, author_mark, updated_at)
                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                           ON CONFLICT(id) DO UPDATE SET
@@ -216,9 +241,12 @@ tiles.post('/iath/import', async (c) => {
                     args: [tileId, domain, content, x, y, z, tile.author_id || user.userId, authorMark]
                 });
 
+                console.log(`Tile ${tileId} imported successfully. Rows affected: ${result.rowsAffected}`);
                 imported++;
-            } catch (tileError) {
-                console.error('Failed to import tile:', tile.id, tileError);
+            } catch (tileError: any) {
+                const errorMsg = `Tile ${tile.id}: ${tileError.message || String(tileError)}`;
+                console.error('Failed to import tile:', errorMsg, tileError);
+                errors.push(errorMsg);
                 // Continue with next tile
             }
         }
@@ -227,7 +255,8 @@ tiles.post('/iath/import', async (c) => {
             success: true,
             imported,
             total: iathData.tiles.length,
-            domain
+            domain,
+            errors: errors.length > 0 ? errors : undefined
         });
     } catch (e) {
         console.error('Import error:', e);
