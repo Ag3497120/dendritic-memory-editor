@@ -4,7 +4,7 @@ compatibility_date = "2024-05-30"
 
 [vars]
 JWT_SECRET = "e58862cdb1ee26704a69c6af29bd8d3f3d38e95cf3b04c07c01182519024042f"
-FRONTEND_URL = "https://25e8597a.dendritic-memory-editor.pages.dev"
+FRONTEND_URL = "https://dendritic-memory-editor.pages.dev"
 
 # OAuth Providers
 GOOGLE_CLIENT_ID = "452469795796-m53ucgqg9egdfi8gglpmrqc68mqbj068.apps.googleusercontent.com"
