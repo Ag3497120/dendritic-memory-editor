@@ -10,23 +10,26 @@ function App() {
     <>
       {/* This component will handle the auth token from the URL on any route */}
       <AuthHandler />
-      
+
       <Routes>
         <Route path="/login" element={<Login />} />
-        
+
+        {/* Auth callback route - handles OAuth redirects */}
+        <Route path="/auth/callback" element={<AuthHandler />} />
+
         {/* Protected Routes */}
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
-          } 
+          }
         />
         {/* Publicly accessible route for guests */}
-        <Route 
-          path="/all-tiles" 
-          element={<AllTiles />} 
+        <Route
+          path="/all-tiles"
+          element={<AllTiles />}
         />
 
         {/* Fallback route */}

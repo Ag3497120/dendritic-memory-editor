@@ -8,13 +8,21 @@ export function AuthHandler() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    // For HashRouter, params are in the hash. e.g., /#/?token=...
-    const hash = window.location.hash;
-    if (!hash.includes('?')) {
+    let params: URLSearchParams;
+
+    // Check for query params in the regular URL (for /auth/callback route)
+    if (location.search) {
+      params = new URLSearchParams(location.search);
+    }
+    // For HashRouter, params might be in the hash. e.g., /#/?token=...
+    else {
+      const hash = window.location.hash;
+      if (!hash.includes('?')) {
         return; // No params to process
+      }
+      params = new URLSearchParams(hash.substring(hash.indexOf('?')));
     }
 
-    const params = new URLSearchParams(hash.substring(hash.indexOf('?')));
     const token = params.get('token');
     const userId = params.get('user_id');
     const email = params.get('email');
@@ -23,13 +31,13 @@ export function AuthHandler() {
     if (error) {
       console.error('OAuth error from backend:', error);
       alert(`Login failed: ${error}`);
-      window.location.hash = '/'; // Clear hash
+      navigate('/login');
       return;
     }
 
     if (token && !isProcessing) {
       setIsProcessing(true);
-      
+
       // Save token and user info to localStorage
       localStorage.setItem('authToken', token);
       if (userId) localStorage.setItem('user_id', userId);
@@ -37,14 +45,21 @@ export function AuthHandler() {
 
       console.log('Auth token saved:', token.substring(0, 20) + '...');
 
-      // Clean the hash and reload the page to apply the auth state
-      window.location.hash = '/';
-      
+      // Redirect to home page
+      navigate('/');
+
       setTimeout(() => {
         window.location.reload();
       }, 50);
     }
   }, [location, navigate, isProcessing]);
 
-  return null; // このコンポーネントは何も表示しない
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Processing authentication...</p>
+      </div>
+    </div>
+  );
 }
