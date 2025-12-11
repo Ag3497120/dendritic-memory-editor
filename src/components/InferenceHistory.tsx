@@ -8,7 +8,7 @@
 import { useState, useEffect } from "react";
 import { useMCP } from "../hooks/useMCP";
 import { useRealtime, RealtimeEvent } from "../hooks/useRealtime";
-import { DocumentTextIcon, TrashIcon, SparkleIcon } from "@heroicons/react/24/outline";
+import { DocumentTextIcon, TrashIcon, StarIcon } from "@heroicons/react/24/outline";
 import apiClient from "../apiClient";
 
 interface SavedInference {
@@ -144,7 +144,7 @@ export default function InferenceHistory() {
       {newInferenceAlert && (
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg animate-in">
           <div className="flex items-center gap-2">
-            <SparkleIcon className="w-5 h-5 text-blue-600 animate-spin" />
+            <StarIcon className="w-5 h-5 text-blue-600 animate-spin" />
             <p className="text-sm text-blue-800">
               New inference saved: <span className="font-semibold">{newInferenceAlert}</span>
             </p>
