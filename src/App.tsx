@@ -2,7 +2,8 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthHandler } from './components/AuthHandler';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import AllTiles from './pages/AllTiles'; // Import the new page
+import AllTiles from './pages/AllTiles';
+import MCPDashboard from './pages/MCPDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -27,6 +28,16 @@ function App() {
         <Route
           path="/all-tiles"
           element={<AllTiles />}
+        />
+
+        {/* MCP Dashboard - Advanced features */}
+        <Route
+          path="/mcp"
+          element={
+            <ProtectedRoute>
+              <MCPDashboard />
+            </ProtectedRoute>
+          }
         />
 
         {/* Fallback route */}

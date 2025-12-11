@@ -6,6 +6,7 @@ import orcid from './routes/auth/orcid'
 import guest from './routes/auth/guest'
 import npi from './routes/auth/npi'
 import tiles from './routes/tiles'
+import mcp from './routes/mcp'
 
 const app = new Hono()
 
@@ -31,5 +32,7 @@ app.route('/api/auth/npi', npi)
 // DMS Tiles CRUD routes
 app.route('/api/tiles', tiles)
 
+// MCP Proxy routes
+app.route('/api/mcp', mcp)
 
 export default app

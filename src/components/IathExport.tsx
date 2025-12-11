@@ -1,26 +1,27 @@
 // frontend/src/components/IathExport.tsx
 import React, { useState } from 'react';
 
-// This should be in a central config file, but defined here for simplicity
-const API_BASE_URL = 'https://dendritic-memory-backend.nullai-db-app-face.workers.dev';
+// Get API URL from environment variable or use default
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://dendritic-memory-backend.nullai-db-app-face.workers.dev';
 
 export function IathExportButton({ domain }: { domain: string }) {
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
     setIsExporting(true);
-    
+
     try {
-      // Assuming a token is stored in localStorage for auth
-      const token = localStorage.getItem('auth_token'); 
-      
+      // Get auth token from localStorage
+      const token = localStorage.getItem('authToken');
+
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(
-        `${API_BASE_URL}/api/db/iath/export?domain=${domain}`,
-        {
-          headers: {
-            // 'Authorization': `Bearer ${token}` // Assuming backend requires auth
-          }
-        }
+        `${API_BASE_URL}/api/tiles/iath/export?domain=${domain}`,
+        { headers }
       );
 
       if (!response.ok) {

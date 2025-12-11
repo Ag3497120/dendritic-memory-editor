@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: dendritic-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8787
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
+    networks:
+      - dendritic-network
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dendritic-backend
+    ports:
+      - "8787:8787"
+    environment:
+      - NODE_ENV=development
+      - JWT_SECRET=e58862cdb1ee26704a69c6af29bd8d3f3d38e95cf3b04c07c01182519024042f
+      - FRONTEND_URL=http://localhost:5173
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm start
+    networks:
+      - dendritic-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8787/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+networks:
+  dendritic-network:
+    driver: bridge
+
+volumes:
+  node_modules_frontend:
+  node_modules_backend:

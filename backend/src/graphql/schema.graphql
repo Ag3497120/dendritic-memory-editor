@@ -1,0 +1,405 @@
+# GraphQL Schema for dendritic-memory-editor
+# Comprehensive type definitions for tiles, inferences, users, and search
+
+"""
+User type - Represents a user in the system
+"""
+type User {
+  id: String!
+  email: String!
+  username: String!
+  isExpert: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  tiles(limit: Int, offset: Int): [Tile!]!
+  inferences(limit: Int, offset: Int): [Inference!]!
+  savedSearches: [SavedSearch!]!
+}
+
+"""
+Knowledge Tile - Core data structure
+"""
+type Tile {
+  id: String!
+  topic: String!
+  domain: String!
+  content: String!
+  authorMark: AuthorMark!
+  confidenceScore: Float!
+  version: Int!
+  coordinates: Coordinates!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  createdBy: User!
+  updatedBy: User
+  history(limit: Int): [TileVersion!]!
+  relatedTiles(limit: Int): [Tile!]!
+  metadata: TileMetadata
+}
+
+"""
+Tile metadata - Additional context and tracking
+"""
+type TileMetadata {
+  inferenceSource: Boolean
+  question: String
+  confidenceScore: Float
+  inferenceDomains: [String!]
+  reasoningChain: String
+  tags: [String!]
+  sources: [String!]
+}
+
+"""
+Tile Version - Version history tracking
+"""
+type TileVersion {
+  id: String!
+  tileId: String!
+  version: String!
+  field: String
+  oldValue: JSON
+  newValue: JSON
+  changeReason: String
+  author: User!
+  timestamp: DateTime!
+}
+
+"""
+Author Mark - Contribution type
+"""
+enum AuthorMark {
+  EXPERT
+  COMMUNITY
+}
+
+"""
+Coordinates - 3D position in knowledge space
+"""
+type Coordinates {
+  x: Int!
+  y: Int!
+  z: Int!
+}
+
+"""
+Inference - AI reasoning result
+"""
+type Inference {
+  id: String!
+  question: String!
+  answer: String!
+  confidenceScore: Float!
+  reasoningChain: String
+  modelUsed: String!
+  domains: [String!]!
+  authorMark: AuthorMark!
+  relatedTile: Tile
+  createdBy: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Search Result - Aggregated search data
+"""
+type SearchResult {
+  id: String!
+  tiles: [Tile!]!
+  inferences: [Inference!]!
+  totalCount: Int!
+  resultCount: Int!
+}
+
+"""
+Saved Search - User's search preferences
+"""
+type SavedSearch {
+  id: String!
+  name: String!
+  query: SearchQuery!
+  domain: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Domain Statistics - Knowledge base stats per domain
+"""
+type DomainStatistics {
+  domain: String!
+  tileCount: Int!
+  averageConfidence: Float!
+  maxVersion: Int!
+  recentTiles(limit: Int): [Tile!]!
+  contributors: Int!
+}
+
+"""
+Database Statistics - Overall system stats
+"""
+type DatabaseStatistics {
+  totalTiles: Int!
+  totalUsers: Int!
+  totalInferences: Int!
+  domains: [DomainStatistics!]!
+  averageConfidence: Float!
+  mostActiveDomains: [DomainStatistics!]!
+}
+
+"""
+Search Query - Complex search filters
+"""
+input SearchQuery {
+  query: String!
+  domain: String
+  authorMark: AuthorMark
+  minConfidence: Float
+  maxConfidence: Float
+  startDate: DateTime
+  endDate: DateTime
+  tags: [String!]
+  sortBy: SearchSort
+  limit: Int
+  offset: Int
+}
+
+"""
+Search Sort Options
+"""
+enum SearchSort {
+  RELEVANCE
+  CONFIDENCE
+  RECENT
+  POPULAR
+}
+
+"""
+Analytics Summary - Overall analytics metrics
+"""
+type AnalyticsSummary {
+  totalEvents: Int!
+  successfulEvents: Int!
+  failedEvents: Int!
+  successRate: Float!
+  errorRate: Float!
+  avgDuration: Float!
+  uniqueUsers: Int!
+}
+
+"""
+Event Analytics - Detailed event tracking
+"""
+type EventAnalytics {
+  id: String!
+  userId: String!
+  eventType: String!
+  action: String!
+  domain: String
+  duration: Int
+  success: Boolean!
+  errorMessage: String
+  timestamp: Int!
+}
+
+"""
+Performance Metric - Performance tracking data
+"""
+type PerformanceMetric {
+  id: String!
+  eventId: String!
+  metric: String!
+  value: Float!
+  unit: String!
+  threshold: Int
+  exceeded: Boolean!
+  timestamp: Int!
+}
+
+"""
+Analytics Data - Complete analytics package
+"""
+type AnalyticsData {
+  summary: AnalyticsSummary!
+  eventTypes: JSON!
+  domains: JSON!
+  slowQueries: [EventAnalytics!]!
+  failedOperations: [EventAnalytics!]!
+}
+
+"""
+Query Root - All read operations
+"""
+type Query {
+  # Tile queries
+  tile(id: String!): Tile
+  tiles(
+    domain: String
+    authorMark: AuthorMark
+    limit: Int
+    offset: Int
+  ): [Tile!]!
+
+  # Search
+  search(query: SearchQuery!): SearchResult!
+
+  # Inference queries
+  inference(id: String!): Inference
+  inferences(
+    domain: String
+    limit: Int
+    offset: Int
+  ): [Inference!]!
+
+  # User queries
+  me: User
+  user(id: String!): User
+  users(limit: Int, offset: Int): [User!]!
+
+  # Statistics
+  domainStatistics(domain: String): [DomainStatistics!]!
+  databaseStatistics: DatabaseStatistics!
+
+  # Saved searches
+  savedSearches: [SavedSearch!]!
+
+  # Analytics queries
+  analytics(
+    startTime: Int!
+    endTime: Int!
+    domain: String
+  ): AnalyticsData!
+
+  eventsByUser(
+    userId: String!
+    limit: Int
+  ): [EventAnalytics!]!
+
+  slowQueries(
+    threshold: Int
+    limit: Int
+  ): [EventAnalytics!]!
+
+  failedOperations(limit: Int): [EventAnalytics!]!
+
+  performanceMetrics(
+    eventId: String!
+  ): [PerformanceMetric!]!
+}
+
+"""
+Mutation Root - All write operations
+"""
+type Mutation {
+  # Tile mutations
+  createTile(
+    topic: String!
+    domain: String!
+    content: String!
+    authorMark: AuthorMark!
+    metadata: TileMetadataInput
+  ): Tile!
+
+  updateTile(
+    id: String!
+    topic: String
+    content: String
+    confidenceScore: Float
+    changeReason: String
+  ): Tile!
+
+  deleteTile(id: String!): Boolean!
+
+  # Inference mutations
+  createInference(
+    question: String!
+    answer: String!
+    confidenceScore: Float!
+    reasoningChain: String
+    domains: [String!]!
+    authorMark: AuthorMark
+  ): Inference!
+
+  saveInferenceAsTile(
+    question: String!
+    answer: String!
+    confidenceScore: Float!
+    reasoningChain: String
+    topic: String!
+    domain: String!
+    authorMark: AuthorMark!
+    domains: [String!]
+  ): Tile!
+
+  deleteInference(id: String!): Boolean!
+
+  # Search mutations
+  saveSearch(
+    name: String!
+    query: SearchQuery!
+  ): SavedSearch!
+
+  deleteSavedSearch(id: String!): Boolean!
+}
+
+"""
+Subscription Root - Real-time updates
+"""
+type Subscription {
+  # Tile updates
+  tileCreated(domain: String): Tile!
+  tileUpdated(domain: String): Tile!
+  tileDeleted(domain: String): String!
+
+  # Inference updates
+  inferenceSaved(domain: String): Inference!
+
+  # User presence
+  userPresenceChanged: User!
+
+  # Activity updates
+  activityUpdate: ActivityEvent!
+}
+
+"""
+Activity Event - Real-time activity tracking
+"""
+type ActivityEvent {
+  userId: String!
+  type: ActivityType!
+  timestamp: DateTime!
+  domain: String
+  metadata: JSON
+}
+
+"""
+Activity Type enum
+"""
+enum ActivityType {
+  USER_JOINED
+  USER_LEFT
+  TILE_CREATED
+  TILE_UPDATED
+  TILE_DELETED
+  INFERENCE_SAVED
+  SEARCH_PERFORMED
+}
+
+"""
+Tile Metadata Input
+"""
+input TileMetadataInput {
+  inferenceSource: Boolean
+  question: String
+  confidenceScore: Float
+  inferenceDomains: [String!]
+  reasoningChain: String
+  tags: [String!]
+  sources: [String!]
+}
+
+"""
+Scalar Types
+"""
+scalar DateTime
+scalar JSON

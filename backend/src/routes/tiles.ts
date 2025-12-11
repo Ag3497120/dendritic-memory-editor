@@ -25,8 +25,8 @@ tiles.get('/', async (c) => {
     query += " ORDER BY updated_at DESC";
 
     try {
-        const result = await db.execute({ sql: query, args });
-        return c.json(result.rows);
+        const result = await db.prepare(query).bind(...args).all();
+        return c.json(result.results);
     } catch (e) {
         console.error(e);
         return c.json({ error: 'Failed to fetch tiles' }, 500);
@@ -40,7 +40,7 @@ tiles.post('/', async (c) => {
         return c.json({ error: 'Unauthorized. You must be logged in to create a tile.' }, 401);
     }
 
-    const { content, domain } = await c.req.json<{ content: string; domain: string }>();
+    const { content, domain, topic } = await c.req.json<{ content: string; domain: string; topic?: string }>();
     if (!content || !domain) {
         return c.json({ error: 'Content and domain are required.' }, 400);
     }
@@ -48,6 +48,7 @@ tiles.post('/', async (c) => {
     const db = getDb(c);
     const tileId = uuidv4();
     const authorMark = user.isExpert ? 'expert' : 'community';
+    const tileTopic = topic || 'General';
 
     // Placeholder for "Dendritic Memory Space" coordinates
     const coordinates = {
@@ -57,15 +58,14 @@ tiles.post('/', async (c) => {
     };
 
     try {
-        await db.execute({
-            sql: `INSERT INTO knowledge_tiles (id, domain, content, coordinates_x, coordinates_y, coordinates_z, author_id, author_mark, updated_at) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-            args: [tileId, domain, content, coordinates.x, coordinates.y, coordinates.z, user.userId, authorMark]
-        });
+        await db.prepare(
+            `INSERT INTO knowledge_tiles (id, domain, topic, content, coordinates_x, coordinates_y, coordinates_z, author_id, author_mark, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+        ).bind(tileId, domain, tileTopic, content, coordinates.x, coordinates.y, coordinates.z, user.userId, authorMark).run();
 
-        const newTile = await db.execute({ sql: "SELECT * FROM knowledge_tiles WHERE id = ?", args: [tileId] });
+        const newTile = await db.prepare("SELECT * FROM knowledge_tiles WHERE id = ?").bind(tileId).first();
 
-        return c.json(newTile.rows[0], 201);
+        return c.json(newTile, 201);
     } catch (e) {
         console.error(e);
         return c.json({ error: 'Failed to create tile' }, 500);
@@ -81,7 +81,7 @@ tiles.put('/:id', async (c) => {
     }
 
     const { id } = c.req.param();
-    const { content, domain } = await c.req.json<{ content: string; domain?: string }>();
+    const { content, domain, topic } = await c.req.json<{ content: string; domain?: string; topic?: string }>();
 
     if (!content) {
         return c.json({ error: 'Content is required.' }, 400);
@@ -91,30 +91,23 @@ tiles.put('/:id', async (c) => {
 
     try {
         // Check if tile exists
-        const existingTile = await db.execute({
-            sql: "SELECT * FROM knowledge_tiles WHERE id = ?",
-            args: [id]
-        });
+        const existingTile = await db.prepare("SELECT * FROM knowledge_tiles WHERE id = ?").bind(id).first();
 
-        if (existingTile.rows.length === 0) {
+        if (!existingTile) {
             return c.json({ error: 'Tile not found' }, 404);
         }
 
         // Update tile - any logged-in user can edit any tile
-        await db.execute({
-            sql: `UPDATE knowledge_tiles
-                  SET content = ?, domain = COALESCE(?, domain), updated_at = CURRENT_TIMESTAMP
-                  WHERE id = ?`,
-            args: [content, domain, id]
-        });
+        await db.prepare(
+            `UPDATE knowledge_tiles
+             SET content = ?, domain = COALESCE(?, domain), topic = COALESCE(?, topic), updated_at = CURRENT_TIMESTAMP
+             WHERE id = ?`
+        ).bind(content, domain, topic, id).run();
 
         // Fetch updated tile
-        const updatedTile = await db.execute({
-            sql: "SELECT * FROM knowledge_tiles WHERE id = ?",
-            args: [id]
-        });
+        const updatedTile = await db.prepare("SELECT * FROM knowledge_tiles WHERE id = ?").bind(id).first();
 
-        return c.json(updatedTile.rows[0]);
+        return c.json(updatedTile);
     } catch (e) {
         console.error(e);
         return c.json({ error: 'Failed to update tile' }, 500);
@@ -134,12 +127,9 @@ tiles.delete('/:id', async (c) => {
     try {
         // Optional: Add logic to check if the user is the author or has admin rights
         // For now, any logged-in user can delete any tile.
-        const result = await db.execute({
-            sql: "DELETE FROM knowledge_tiles WHERE id = ?",
-            args: [id]
-        });
+        const result = await db.prepare("DELETE FROM knowledge_tiles WHERE id = ?").bind(id).run();
 
-        if (result.rowsAffected === 0) {
+        if (result.meta.changes === 0) {
             return c.json({ error: 'Tile not found' }, 404);
         }
 
@@ -147,6 +137,67 @@ tiles.delete('/:id', async (c) => {
     } catch (e) {
         console.error(e);
         return c.json({ error: 'Failed to delete tile' }, 500);
+    }
+});
+
+// GET /iath/export - Export tiles as .iath file
+tiles.get('/iath/export', async (c) => {
+    const { domain } = c.req.query();
+    const db = getDb(c);
+
+    let query = "SELECT * FROM knowledge_tiles";
+    const args: string[] = [];
+
+    if (domain) {
+        query += " WHERE domain = ?";
+        args.push(domain);
+    }
+
+    query += " ORDER BY updated_at DESC";
+
+    try {
+        const result = await db.prepare(query).bind(...args).all();
+        const tiles = result.results as any[];
+
+        // Convert to .iath format (JSON version 2)
+        const iathTiles = tiles.map((tile: any) => ({
+            id: tile.id,
+            title: tile.topic || 'Untitled',
+            coordinates: {
+                x: tile.coordinates_x || 50.0,
+                y: tile.coordinates_y || 50.0,
+                z: tile.coordinates_z || 50.0
+            },
+            content: tile.content,
+            verification_status: tile.author_mark === 'expert' ? 'expert_verified' : 'community',
+            created_at: tile.created_at || new Date().toISOString(),
+            updated_at: tile.updated_at || new Date().toISOString(),
+            author_id: tile.author_id || 'system',
+            author_mark: tile.author_mark || 'community'
+        }));
+
+        const domainName = domain || 'General';
+        const domainCode = domain === 'Medical' ? 1 : domain === 'AI_Fundamentals' ? 2 : 1;
+
+        const exportData = {
+            version: 2,
+            header: {
+                domain_code: domainCode,
+                tile_count: iathTiles.length,
+                created_at: new Date().toISOString(),
+                domain: domainName
+            },
+            tiles: iathTiles
+        };
+
+        // Set response headers for file download
+        c.header('Content-Type', 'application/json');
+        c.header('Content-Disposition', `attachment; filename="${domainName}_tiles_${Date.now()}.iath"`);
+
+        return c.json(exportData);
+    } catch (e) {
+        console.error('Export error:', e);
+        return c.json({ error: 'Failed to export tiles', details: String(e) }, 500);
     }
 });
 
@@ -218,6 +269,9 @@ tiles.post('/iath/import', async (c) => {
                 const y = coords.y !== undefined ? coords.y : Math.random() * 100;
                 const z = coords.z !== undefined ? coords.z : Math.random() * 100;
 
+                // Extract topic from tile data or use title as topic, or default to domain
+                const topic = tile.topic || tile.title || domain || 'General';
+
                 // Map verification_status to author_mark
                 let authorMark = 'community';
                 if (tile.verification_status === 'expert_verified' || tile.author_mark === 'expert') {
@@ -226,22 +280,22 @@ tiles.post('/iath/import', async (c) => {
                     authorMark = tile.author_mark;
                 }
 
-                console.log(`Importing tile ${tileId}: content length=${content.length}, coords=(${x},${y},${z})`);
+                console.log(`Importing tile ${tileId}: content length=${content.length}, coords=(${x},${y},${z}), topic=${topic}`);
 
-                // Insert or update tile
-                const result = await db.execute({
-                    sql: `INSERT INTO knowledge_tiles (id, domain, content, coordinates_x, coordinates_y, coordinates_z, author_id, author_mark, updated_at)
-                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                          ON CONFLICT(id) DO UPDATE SET
-                            content = excluded.content,
-                            coordinates_x = excluded.coordinates_x,
-                            coordinates_y = excluded.coordinates_y,
-                            coordinates_z = excluded.coordinates_z,
-                            updated_at = CURRENT_TIMESTAMP`,
-                    args: [tileId, domain, content, x, y, z, tile.author_id || user.userId, authorMark]
-                });
+                // Insert or update tile - always use current user as author since imported author may not exist
+                const result = await db.prepare(
+                    `INSERT INTO knowledge_tiles (id, domain, topic, content, coordinates_x, coordinates_y, coordinates_z, author_id, author_mark, updated_at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                     ON CONFLICT(id) DO UPDATE SET
+                       content = excluded.content,
+                       topic = excluded.topic,
+                       coordinates_x = excluded.coordinates_x,
+                       coordinates_y = excluded.coordinates_y,
+                       coordinates_z = excluded.coordinates_z,
+                       updated_at = CURRENT_TIMESTAMP`
+                ).bind(tileId, domain, topic, content, x, y, z, user.userId, authorMark).run();
 
-                console.log(`Tile ${tileId} imported successfully. Rows affected: ${result.rowsAffected}`);
+                console.log(`Tile ${tileId} imported successfully. Meta: ${JSON.stringify(result.meta)}`);
                 imported++;
             } catch (tileError: any) {
                 const errorMsg = `Tile ${tile.id}: ${tileError.message || String(tileError)}`;
