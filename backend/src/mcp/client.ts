@@ -87,15 +87,23 @@ export interface MCPImportResult {
 
 /**
  * MCP Server Configuration
+ * Compatible with Cloudflare Workers (no process.env)
  */
+const getEnvVar = (key: string, defaultValue: string): string => {
+  if (typeof process !== "undefined" && process.env) {
+    return process.env[key] || defaultValue;
+  }
+  return defaultValue;
+};
+
 export const MCP_SERVER_CONFIG = {
-  host: process.env.MCP_SERVER_HOST || "localhost",
-  port: parseInt(process.env.MCP_SERVER_PORT || "8000", 10),
-  protocol: process.env.MCP_SERVER_PROTOCOL || "http",
-  base_url: process.env.MCP_SERVER_URL || "http://localhost:8000",
-  timeout: parseInt(process.env.MCP_SERVER_TIMEOUT || "30000", 10),
-  retry_attempts: parseInt(process.env.MCP_SERVER_RETRY_ATTEMPTS || "3", 10),
-  retry_delay: parseInt(process.env.MCP_SERVER_RETRY_DELAY || "1000", 10),
+  host: getEnvVar("MCP_SERVER_HOST", "localhost"),
+  port: parseInt(getEnvVar("MCP_SERVER_PORT", "8000"), 10),
+  protocol: getEnvVar("MCP_SERVER_PROTOCOL", "http"),
+  base_url: getEnvVar("MCP_SERVER_URL", "http://localhost:8000"),
+  timeout: parseInt(getEnvVar("MCP_SERVER_TIMEOUT", "30000"), 10),
+  retry_attempts: parseInt(getEnvVar("MCP_SERVER_RETRY_ATTEMPTS", "3"), 10),
+  retry_delay: parseInt(getEnvVar("MCP_SERVER_RETRY_DELAY", "1000"), 10),
 };
 
 /**

@@ -22,6 +22,15 @@ app.get('/', (c) => {
   return c.text('Hello from Dendritic Memory Editor Backend!')
 })
 
+app.get('/health', (c) => {
+  return c.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+    environment: 'production'
+  })
+})
+
 // Auth routes
 app.route('/api/auth/google', google)
 app.route('/api/auth/github', github)
