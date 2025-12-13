@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import apiClient from '../apiClient';
 
+import { Layout } from '../components/Layout';
 import { TileCard } from '../components/TileCard';
 import { CreateTileModal } from '../components/CreateTileModal';
 import { IathExportButton } from '../components/IathExport';
 import { IathImportButton } from '../components/IathImport';
-import { ArrowPathIcon, PlusIcon } from '@heroicons/react/24/solid';
+import { ArrowPathIcon, PlusIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 // Define types locally for clarity
 interface KnowledgeTile {
@@ -98,126 +99,156 @@ export default function Dashboard() {
     };
     
     return (
-        <div className="bg-slate-50 min-h-screen">
-            {/* Header */}
-            <header className="bg-white shadow-sm sticky top-0 z-10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-3">
-                        <h1 className="text-xl font-bold text-gray-900">Dendritic Memory</h1>
-                        <div className="flex items-center space-x-4">
-                            <span className="text-sm text-gray-600 hidden sm:block">
-                                {user?.isExpert 
-                                    ? 'You are editing as an Expert member.' 
-                                    : 'You are editing as a Community member.'
-                                }
-                            </span>
-                            <button onClick={logout} className="text-sm font-medium text-red-600 hover:text-red-800">
-                                Logout
-                            </button>
+        <Layout>
+            {/* Dashboard Content */}
+            <div className="space-y-6">
+                {/* Welcome Section */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Total Tiles</p>
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    {dbStats?.total_knowledge_tiles || 0}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                                <SparklesIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Total Users</p>
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    {dbStats?.total_users || 0}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                                <span className="text-2xl">👥</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Your Role</p>
+                                <p className="text-lg font-bold text-gray-900 dark:text-white">
+                                    {user?.isExpert ? 'Expert' : 'Community'}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
+                                <span className="text-2xl">{user?.isExpert ? '⭐' : '👤'}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </header>
 
-            {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    
-                    {/* Left Sidebar */}
-                    <aside className="lg:col-span-1">
-                        <div className="space-y-6 sticky top-24">
-                            {/* Domain Selector */}
-                            <div>
-                                <label htmlFor="domain-select" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Domain
-                                </label>
-                                <select
-                                    id="domain-select"
-                                    value={selectedDomain}
-                                    onChange={(e) => setSelectedDomain(e.target.value)}
-                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                >
-                                    {PREDEFINED_DOMAINS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                </select>
-                                {selectedDomain === 'Other' && (
-                                    <input
-                                        type="text"
-                                        value={customDomain}
-                                        onChange={(e) => setCustomDomain(e.target.value)}
-                                        placeholder="Enter custom domain"
-                                        className="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    />
-                                )}
-                            </div>
-
-                            {/* DB Stats */}
-                            {dbStats && (
-                                <div className="border-t pt-6">
-                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Database Stats</h3>
-                                    <div className="mt-2 space-y-1 text-sm text-gray-800">
-                                        <p><strong>{dbStats.total_knowledge_tiles}</strong> Total Tiles</p>
-                                        <p><strong>{dbStats.total_users}</strong> Total Users</p>
-                                    </div>
-                                </div>
+                {/* Main Content */}
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {/* Sidebar */}
+                    <div className="lg:col-span-1 space-y-4">
+                        {/* Domain Selector */}
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Select Domain
+                            </label>
+                            <select
+                                value={selectedDomain}
+                                onChange={(e) => setSelectedDomain(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                            >
+                                {PREDEFINED_DOMAINS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                            {selectedDomain === 'Other' && (
+                                <input
+                                    type="text"
+                                    value={customDomain}
+                                    onChange={(e) => setCustomDomain(e.target.value)}
+                                    placeholder="Enter custom domain"
+                                    className="w-full mt-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                />
                             )}
-
-                            {/* Management Actions */}
-                            <div className="border-t pt-6 space-y-4">
-                                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Management</h3>
-                                <div className="flex flex-col space-y-2">
-                                    <IathExportButton domain={activeDomain} />
-                                    <IathImportButton />
-                                    <Link to="/all-tiles" className="w-full text-center px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 transition-colors">
-                                        View All Tiles
-                                    </Link>
-                                </div>
-                            </div>
                         </div>
-                    </aside>
 
-                    {/* Main Tile Area */}
+                        {/* Actions */}
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 space-y-2">
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                            >
+                                <PlusIcon className="w-4 h-4" />
+                                Create Tile
+                            </button>
+                            <IathExportButton domain={activeDomain} />
+                            <IathImportButton />
+                            <Link
+                                to="/all-tiles"
+                                className="w-full block text-center px-4 py-2 bg-gray-600 dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                            >
+                                View All Tiles
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Tiles Grid */}
                     <div className="lg:col-span-3">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold text-gray-900">Knowledge Tiles</h2>
-                            <div className="flex items-center space-x-2">
-                                <button onClick={fetchData} disabled={isLoading} className="p-2 text-gray-500 hover:text-gray-800 disabled:opacity-50">
-                                    <ArrowPathIcon className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} />
-                                </button>
-                                <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors">
-                                    <PlusIcon className="h-5 w-5" />
-                                    Create Tile
-                                </button>
-                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                Knowledge Tiles
+                            </h2>
+                            <button
+                                onClick={fetchData}
+                                disabled={isLoading}
+                                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                                title="Refresh"
+                            >
+                                <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+                            </button>
                         </div>
 
-                        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">{error}</div>}
-                        
+                        {error && (
+                            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg mb-4">
+                                <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+                            </div>
+                        )}
+
                         {isLoading ? (
-                            <p>Loading tiles for "{activeDomain}"...</p>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            <div className="flex items-center justify-center py-12">
+                                <div className="text-center">
+                                    <div className="w-8 h-8 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-2"></div>
+                                    <p className="text-gray-600 dark:text-gray-400">Loading tiles...</p>
+                                </div>
+                            </div>
+                        ) : tiles.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {tiles.map(tile => (
                                     <TileCard key={tile.id} tile={tile} onDelete={handleDeleteTile} />
                                 ))}
                             </div>
-                        )}
-                        {!isLoading && tiles.length === 0 && !error && (
-                            <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                                <h3 className="text-lg font-medium text-gray-900">No tiles found</h3>
-                                <p className="mt-1 text-sm text-gray-500">Create a new tile to get started in the "{activeDomain}" domain.</p>
+                        ) : (
+                            <div className="text-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+                                <SparklesIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
+                                    No tiles found
+                                </h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    Create a new tile to get started in the "{activeDomain}" domain.
+                                </p>
                             </div>
                         )}
                     </div>
                 </div>
-            </main>
+            </div>
 
-            <CreateTileModal 
+            <CreateTileModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleCreateTile}
                 predefinedDomains={PREDEFINED_DOMAINS}
                 activeDomain={activeDomain}
             />
-        </div>
+        </Layout>
     );
 }
